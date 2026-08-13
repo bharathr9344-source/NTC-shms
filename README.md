@@ -1,4 +1,4 @@
-# CityCare Hospital Laboratory Management System
+# secure Hospital Laboratory Management System
 
 A secure, CSV-backed web application for managing a hospital diagnostic laboratory. Built with **Flask** (Python), **HTML**, **CSS** and **JavaScript**, featuring a professional white and blue interface.
 
