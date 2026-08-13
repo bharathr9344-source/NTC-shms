@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block heading %}Reports &amp; Records{% endblock %}
+{% block subheading %}Filter, review and print test reports{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-body">
+    <form method="get" class="filters">
+      <div class="form-group">
+        <label>Patient</label>
+        <select name="patient">
+          <option value="">All patients</option>
+          {% for p in patients %}
+          <option value="{{ p.id }}" {{ 'selected' if request.args.get('patient') == p.id else '' }}>{{ p.name }} ({{ p.id }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status">
+          <option value="">All statuses</option>
+          {% for s in all_statuses %}
+          <option value="{{ s }}" {{ 'selected' if request.args.get('status') == s else '' }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date" value="{{ request.args.get('date', '') }}">
+      </div>
+      <button type="submit" class="btn btn-primary">Apply Filter</button>
+      {% if request.args %}
+      <a href="{{ url_for('reports_page') }}" class="btn btn-ghost">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h3>Test Records <span class="badge badge-info">{{ rows | length }}</span></h3>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span class="badge badge-success">Completed Value: &#8377; {{ revenue | int }}</span>
+      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">&#128424; Print</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Result ID</th>
+          <th>Order</th>
+          <th>Patient</th>
+          <th>Test</th>
+          <th>Category</th>
+          <th>Result</th>
+          <th>Reference Range</th>
+          <th>Entered At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="cell-strong">{{ row.item.id }}</td>
+          <td class="cell-muted">{{ row.order_id }}</td>
+          <td>{{ row.patient }}</td>
+          <td>{{ row.test }}</td>
+          <td><span class="badge badge-info">{{ row.category }}</span></td>
+          <td class="cell-strong">{{ row.item.result_value }} {{ row.item.unit }}</td>
+          <td class="cell-muted">{{ row.item.reference_range or '—' }}</td>
+          <td class="cell-muted">{{ row.item.entered_at }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8"><div class="empty-state"><div class="big">&#128203;</div><h4>No report records found</h4><p>Adjust filters or enter results to generate reports.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

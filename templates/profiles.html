@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% from "_picker.html" import test_picker %}
+{% block title %}Profiles{% endblock %}
+{% block heading %}Test Profiles &amp; Packages{% endblock %}
+{% block subheading %}Bundle tests into reusable health packages{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-head">
+    <h3>Create New Profile</h3>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('profiles_page') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Profile Name <span class="req">*</span></label>
+          <input type="text" name="profile_name" required placeholder="e.g. Pregnancy Panel">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" name="description" placeholder="Short description">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label>Select Tests to include <span class="req">*</span></label>
+        {{ test_picker([], {}, tests_by_cat) }}
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" onclick="return syncPickerSubmit(event)">Create Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h3>Saved Profiles <span class="badge badge-info">{{ profiles | length }}</span></h3>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Profile Name</th>
+          <th>Description</th>
+          <th>Tests</th>
+          <th>Package Price</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pid, ps in profiles.items() %}
+        <tr>
+          <td class="cell-strong">{{ pid }}</td>
+          <td>{{ ps.profile.profile_name }}</td>
+          <td class="cell-muted">{{ ps.profile.description or '—' }}</td>
+          <td>
+            <span class="badge badge-info">{{ ps.count }} tests</span>
+            <span class="cell-muted" style="display:block;font-size:12px;">
+              {% for tid in ps.test_ids[:3] %}{{ t_map.get(tid, {}).get('test_name', tid) }}{{ ', ' if not loop.last }}{% endfor %}
+              {% if ps.count > 3 %}…{% endif %}
+            </span>
+          </td>
+          <td class="cell-strong">&#8377; {{ ps.total | int }}</td>
+          <td>
+            <button class="btn btn-ghost btn-sm" onclick="editProfile('{{ pid }}', {{ ps.test_ids | tojson }}, {{ ps.profile.profile_name | tojson }}, {{ ps.profile.description | tojson }})">Edit</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="deleteProfile('{{ pid }}')">Delete</button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6"><div class="empty-state"><div class="big">&#128230;</div><h4>No profiles yet</h4><p>Create a profile to bundle multiple tests.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="editProfile" hidden>
+  <div class="modal-head">
+    <h3>Edit Profile</h3>
+    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+  </div>
+  <div class="modal-body">
+    <form method="post" action="{{ url_for('profiles_page') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="profile_id" id="ep-id">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Profile Name <span class="req">*</span></label>
+          <input type="text" name="profile_name" id="ep-name" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" name="description" id="ep-desc">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:14px;">
+        <label>Tests in this profile</label>
+        <div id="ep-picker"></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" onclick="return syncPickerSubmit(event)">Save Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function deleteProfile(pid) {
+  if (!confirm('Delete profile ' + pid + '?')) return;
+  var f = document.createElement('form');
+  f.method = 'post';
+  f.innerHTML = '<input type="hidden" name="csrf_token" value="' + window.CSRF_TOKEN + '">' +
+                '<input type="hidden" name="action" value="delete">' +
+                '<input type="hidden" name="profile_id" value="' + pid + '">';
+  document.body.appendChild(f);
+  f.submit();
+}
+
+function editProfile(pid, testIds, name, desc) {
+  document.getElementById('ep-id').value = pid;
+  document.getElementById('ep-name').value = name;
+  document.getElementById('ep-desc').value = desc || '';
+  document.getElementById('ep-picker').innerHTML = '';
+  openModal('editProfile');
+  var target = document.getElementById('ep-picker');
+  var src = document.querySelector('[data-picker]');
+  target.innerHTML = src.innerHTML;
+  target.querySelector('.picker-search').remove();
+  document.querySelectorAll('#ep-picker .test-cb').forEach(function (cb) {
+    if (testIds.indexOf(cb.value) !== -1) {
+      cb.checked = true;
+      cb.closest('.pick-card').classList.add('checked');
+    }
+  });
+  initPicker();
+  syncPicker();
+}
+</script>
+{% endblock %}

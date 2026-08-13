@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% from "_picker.html" import test_picker %}
+{% block title %}Test Orders{% endblock %}
+{% block heading %}Test Orders{% endblock %}
+{% block subheading %}Create and manage multi-test laboratory orders{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-head">
+    <h3>All Test Orders <span class="badge badge-info">{{ orders | length }}</span></h3>
+    <button class="btn btn-primary" onclick="openModal('newOrder'); setTimeout(initPicker, 60);">&#43; New Test Order</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Patient</th>
+          <th>Priority</th>
+          <th>Requested By</th>
+          <th>Ordered At</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr class="clickable" onclick="window.location='{{ url_for('order_detail', order_id=o.id) }}'">
+          <td class="cell-strong">{{ o.id }}</td>
+          <td>{{ o.patient_name }}</td>
+          <td>
+            <span class="badge {{ 'badge-danger' if o.priority == 'Stat' else ('badge-warning' if o.priority == 'Urgent' else 'badge-info') }}">{{ o.priority }}</span>
+          </td>
+          <td>{{ o.requested_by }}</td>
+          <td class="cell-muted">{{ o.ordered_at }}</td>
+          <td>&#8377; {{ o.total | int }}</td>
+          <td>
+            {% if o.status == 'Completed' %}<span class="badge badge-success">Completed</span>
+            {% elif o.status == 'Cancelled' %}<span class="badge badge-danger">Cancelled</span>
+            {% elif o.status == 'In Progress' %}<span class="badge badge-warning">In Progress</span>
+            {% else %}<span class="badge badge-muted">Pending</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><div class="big">&#9998;</div><h4>No orders placed</h4><p>Create a new test order to begin.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="newOrder" hidden>
+  <div class="modal-head">
+    <h3>New Test Order</h3>
+    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+  </div>
+  <div class="modal-body">
+    <form method="post" action="{{ url_for('orders_page') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Patient <span class="req">*</span></label>
+          <select name="patient_id" required>
+            <option value="">— Select patient —</option>
+            {% for p in patients %}
+            <option value="{{ p.id }}">{{ p.name }} ({{ p.id }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select name="priority">
+            <option>Routine</option>
+            <option>Urgent</option>
+            <option>Stat</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Requested By</label>
+          <input type="text" name="requested_by" placeholder="e.g. Reception / Dr. Meena">
+        </div>
+      </div>
+
+      <div class="form-group full" style="margin-top:8px;">
+        <label>Select Tests &amp; Profiles <span class="req">*</span></label>
+        {{ test_picker(profiles, profile_summaries, tests_by_cat) }}
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" onclick="return syncPickerSubmit(event)">Create Order</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

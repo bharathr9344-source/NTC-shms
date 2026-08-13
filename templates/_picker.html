@@ -1,0 +1,54 @@
+{% macro test_picker(profiles, profile_summaries, tests_by_cat, selected_tests=[], selected_profiles=[], with_profiles=true) %}
+<div class="picker" data-picker>
+  <div class="picker-search">
+    <span class="ico">&#128269;</span>
+    <input type="text" placeholder="Search tests by name or category..." oninput="filterPicker(this)">
+  </div>
+
+  <div class="picker-body">
+    {% if with_profiles and profiles %}
+    <div class="picker-section">
+      <div class="picker-section-title">Profiles / Packages</div>
+      <div class="pick-grid">
+        {% for p in profiles %}
+        {% set ps = profile_summaries.get(p['id'], {}) if profile_summaries else {} %}
+        <label class="pick-card profile {{ 'checked' if p['id'] in selected_profiles else '' }}"
+               data-profile="{{ p['id'] }}"
+               data-members="{{ ps.get('test_ids', []) | join(',') }}">
+          <input type="checkbox" class="pick-check profile-cb" value="{{ p['id'] }}"
+                 onchange="onProfileChange(this)"
+                 {{ 'checked' if p['id'] in selected_profiles else '' }}>
+          <span class="pick-name">{{ p['profile_name'] }}</span>
+          <span class="pick-meta">{{ ps.get('count', 0) }} tests &middot; &#8377;{{ ps.get('total', 0) | int }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% for cat, ts in tests_by_cat.items() %}
+    <div class="picker-section" data-cat="{{ cat }}">
+      <div class="picker-section-title">{{ cat }}</div>
+      <div class="pick-grid">
+        {% for t in ts %}
+        <label class="pick-card test {{ 'checked' if t['id'] in selected_tests else '' }}">
+          <input type="checkbox" class="pick-check test-cb" value="{{ t['id'] }}"
+                 data-price="{{ t.get('price', 0) }}"
+                 onchange="onPickChange(this)"
+                 {{ 'checked' if t['id'] in selected_tests else '' }}>
+          <span class="pick-name">{{ t['test_name'] }}</span>
+          <span class="pick-meta">&#8377;{{ t.get('price', 0) | int }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="picker-foot">
+    <span class="pick-summary">0 tests selected</span>
+    <span class="pick-total">Total: &#8377;0</span>
+  </div>
+  <div class="picker-hidden"></div>
+</div>
+{% endmacro %}

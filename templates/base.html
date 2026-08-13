@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Lab Management{% endblock %} | CityCare Lab</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="logo">LB</div>
+        <div>
+          <h1>CityCare Laboratory</h1>
+          <p>Hospital Diagnostics</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <div class="nav-label">Main Menu</div>
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if active == 'dashboard' else '' }}"><span class="ico">&#9632;</span> Dashboard</a>
+        <a href="{{ url_for('patients_page') }}" class="{{ 'active' if active == 'patients' else '' }}"><span class="ico">&#9787;</span> Patients</a>
+        <a href="{{ url_for('orders_page') }}" class="{{ 'active' if active == 'orders' else '' }}"><span class="ico">&#9998;</span> Test Orders</a>
+        <a href="{{ url_for('results_page') }}" class="{{ 'active' if active == 'results' else '' }}"><span class="ico">&#10003;</span> Results</a>
+        <a href="{{ url_for('reports_page') }}" class="{{ 'active' if active == 'reports' else '' }}"><span class="ico">&#128203;</span> Reports</a>
+        <div class="nav-label">Catalog</div>
+        <a href="{{ url_for('profiles_page') }}" class="{{ 'active' if active == 'profiles' else '' }}"><span class="ico">&#128230;</span> Profiles &amp; Packages</a>
+        <a href="{{ url_for('tests_page') }}" class="{{ 'active' if active == 'tests' else '' }}"><span class="ico">&#8984;</span> Test Catalog</a>
+        {% if current_user and current_user.role == 'admin' %}
+        <div class="nav-label">Administration</div>
+        <a href="{{ url_for('users_page') }}" class="{{ 'active' if active == 'users' else '' }}"><span class="ico">&#9881;</span> Users &amp; Access</a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-foot">
+        <div>&#9679; System Online</div>
+        <div>v1.0.0 &middot; CSV Storage</div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">&#9776;</button>
+          <div class="page-title">
+            <h2>{% block heading %}Overview{% endblock %}</h2>
+            <p>{% block subheading %}{{ today_str }}{% endblock %}</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="search-box">
+            <span>&#128269;</span>
+            <input type="text" placeholder="Quick search..." id="globalSearch" oninput="globalSearch(this.value)">
+          </div>
+          <div class="user-menu">
+            <button class="avatar" onclick="document.getElementById('userDrop').classList.toggle('open')">
+              {{ (current_user.full_name or current_user.username)[:2] | upper }}
+            </button>
+            <div class="user-drop" id="userDrop">
+              <div class="user-drop-head">
+                <strong>{{ current_user.full_name or current_user.username }}</strong>
+                <span class="badge {{ 'badge-warning' if current_user.role == 'admin' else 'badge-info' }}">{{ current_user.role }}</span>
+              </div>
+              <a href="{{ url_for('change_password') }}">&#128274; Change Password</a>
+              {% if current_user.role == 'admin' %}
+              <a href="{{ url_for('users_page') }}">&#9881; Manage Users</a>
+              {% endif %}
+              <a href="{{ url_for('logout') }}" style="color:var(--danger);">&#10060; Logout</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-wrap">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" id="modalBox"></div>
+  </div>
+
+  <script>
+    window.CSRF_TOKEN = {{ csrf_token() | tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

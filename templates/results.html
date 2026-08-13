@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Results{% endblock %}
+{% block heading %}Result Entry{% endblock %}
+{% block subheading %}Enter results for each test in an order{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+  <div class="card">
+    <div class="card-head"><h3>Enter Results</h3></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label>Open Test Order <span class="req">*</span></label>
+        <select id="orderSelect" onchange="loadOrderItems(this.value)">
+          <option value="">— Select an open order —</option>
+          {% for o in open_orders %}
+          <option value="{{ o.id }}">{{ o.id }} &middot; {{ o.patient_name }} &middot; ({{ o.status }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="itemLoader" style="display:none;text-align:center;padding:20px;color:var(--muted);">Loading tests...</div>
+      <div id="itemsArea" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Recently Entered <span class="badge badge-info">{{ recent | length }}</span></h3></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Test</th><th>Order</th><th>Patient</th><th>Result</th><th>At</th></tr>
+        </thead>
+        <tbody>
+          {% for r in recent[:10] %}
+          <tr>
+            <td>{{ r.test }}</td>
+            <td class="cell-muted">{{ r.order_id }}</td>
+            <td>{{ r.patient }}</td>
+            <td class="cell-strong">{{ r.value }} {{ r.unit }}</td>
+            <td class="cell-muted">{{ r.entered_at }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5"><div class="empty-state"><div class="big">&#128203;</div><h4>No results yet</h4><p>Select an open order and enter results.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function loadOrderItems(orderId) {
+  var area = document.getElementById('itemsArea');
+  var loader = document.getElementById('itemLoader');
+  if (!orderId) { area.innerHTML = ''; return; }
+  loader.style.display = 'block';
+  area.innerHTML = '';
+  fetch('/api/orders/' + orderId)
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      loader.style.display = 'none';
+      if (!d.ok) { area.innerHTML = '<div class="empty-state"><p>Order not found</p></div>'; return; }
+      renderItems(d);
+    })
+    .catch(function () { loader.style.display = 'none'; area.innerHTML = '<div class="empty-state"><p>Network error</p></div>'; });
+}
+
+function renderItems(d) {
+  var pending = d.items.filter(function (i) { return i.status !== 'Completed' && i.status !== 'Cancelled'; });
+  var done = d.items.filter(function (i) { return i.status === 'Completed'; });
+  var area = document.getElementById('itemsArea');
+  if (pending.length === 0) {
+    area.innerHTML = '<div class="empty-state"><div class="big">&#10004;</div><h4>No pending tests</h4><p>All tests on ' + d.order_id + ' are completed.</p></div>';
+    return;
+  }
+  var html = '<form method="post" action="/results">' +
+             '<input type="hidden" name="csrf_token" value="' + escapeHtml(window.CSRF_TOKEN) + '">' +
+             '<input type="hidden" name="order_id" value="' + escapeHtml(d.order_id) + '">';
+  html += '<div class="flash success" style="margin-bottom:14px;">Order ' + escapeHtml(d.order_id) + ' &middot; ' + escapeHtml(d.patient) + ' &middot; <strong>' + pending.length + ' pending test(s)</strong></div>';
+  pending.forEach(function (i) {
+    html += '<div class="item-entry">';
+    html += '<div class="item-entry-head"><strong>' + escapeHtml(i.test_name) + '</strong><span class="badge badge-info">' + escapeHtml(i.category) + '</span></div>';
+    html += '<input type="hidden" name="item_ids" value="' + escapeHtml(i.id) + '">';
+    html += '<div class="item-entry-grid">';
+    html += '<div class="form-group"><label>Result Value <span class="req">*</span></label><input type="text" name="result_values" value="' + escapeHtml(i.result_value) + '" placeholder="e.g. 95"></div>';
+    html += '<div class="form-group"><label>Unit</label><input type="text" name="units" value="' + escapeHtml(i.unit) + '" placeholder="e.g. mg/dL"></div>';
+    html += '</div>';
+    html += '<div class="form-group"><label>Reference Range</label><input type="text" name="reference_ranges" value="' + escapeHtml(i.reference_range) + '" placeholder="e.g. 70-100 mg/dL"></div>';
+    html += '</div>';
+  });
+  html += '<div class="form-actions"><button type="submit" class="btn btn-primary btn-block">Save All Results</button></div></form>';
+  area.innerHTML = html;
+}
+</script>
+{% endblock %}

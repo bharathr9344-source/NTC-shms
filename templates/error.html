@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ code }} | CityCare Laboratory</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-body">
+  <div class="auth-wrap">
+    <div class="auth-card" style="text-align:center;">
+      <div style="font-size:56px;font-weight:800;color:var(--primary);line-height:1;">{{ code }}</div>
+      <h1 style="margin-top:10px;">{{ message }}</h1>
+      <p style="color:var(--muted);margin-top:6px;">
+        {% if code == 403 %}You do not have permission to view this page.
+        {% elif code == 404 %}The page you are looking for does not exist.
+        {% elif code == 413 %}The request you made was too large.
+        {% else %}Something went wrong on our side. Please try again.{% endif %}
+      </p>
+      <div style="margin-top:22px;display:flex;gap:10px;justify-content:center;">
+        {% if session.get('user_id') %}
+        <a class="btn btn-primary" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+        <a class="btn btn-ghost" href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+        <a class="btn btn-primary" href="{{ url_for('login') }}">Back to Login</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

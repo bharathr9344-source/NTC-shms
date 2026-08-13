@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Laboratory Dashboard{% endblock %}
+{% block subheading %}{{ today_str }} &middot; Real-time lab overview{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-ico">&#128100;</div>
+    <div class="stat-info">
+      <h3>{{ stats.patients }}</h3>
+      <p>Registered Patients</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-ico">&#8984;</div>
+    <div class="stat-info">
+      <h3>{{ stats.tests }}</h3>
+      <p>Tests in Catalog</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-ico">&#128230;</div>
+    <div class="stat-info">
+      <h3>{{ stats.profiles }}</h3>
+      <p>Test Profiles</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-ico">&#9201;</div>
+    <div class="stat-info">
+      <h3>{{ stats.pending }}</h3>
+      <p>Open Orders</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-ico">&#10004;</div>
+    <div class="stat-info">
+      <h3>{{ stats.completed }}</h3>
+      <p>Completed Orders</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-head">
+      <h3>Recent Test Orders</h3>
+      <a href="{{ url_for('orders_page') }}" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Patient</th>
+            <th>Priority</th>
+            <th>Total</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in recent_orders %}
+          <tr class="clickable" onclick="window.location='{{ url_for('order_detail', order_id=o.id) }}'">
+            <td class="cell-strong">{{ o.id }}</td>
+            <td>{{ o.patient_name }}</td>
+            <td><span class="badge {{ 'badge-warning' if o.priority in ['Urgent','Stat'] else 'badge-info' }}">{{ o.priority }}</span></td>
+            <td>&#8377; {{ o.total | int }}</td>
+            <td>
+              {% if o.status == 'Completed' %}<span class="badge badge-success">Completed</span>
+              {% elif o.status == 'Cancelled' %}<span class="badge badge-danger">Cancelled</span>
+              {% elif o.status == 'In Progress' %}<span class="badge badge-warning">In Progress</span>
+              {% else %}<span class="badge badge-muted">Pending</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5"><div class="empty-state"><div class="big">&#128203;</div><h4>No orders yet</h4><p>Create test orders from the Test Orders page.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Tests by Category</h3></div>
+    <div class="card-body">
+      <div class="chart-bar">
+        {% set total = categories.values() | sum %}
+        {% for cat, count in categories.items() %}
+        <div class="chart-row">
+          <span class="name">{{ cat }}</span>
+          <div class="progress-track">
+            <div class="progress-bar" style="width: {{ (count / total * 100) if total else 0 }}%"></div>
+          </div>
+          <span class="num">{{ count }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;">
+      <div class="metric-line"><span class="lbl">Revenue (completed tests)</span><span class="val">&#8377; {{ stats.revenue | int }}</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

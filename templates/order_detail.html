@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% from "_picker.html" import test_picker %}
+{% block title %}Order {{ order.id }}{% endblock %}
+{% block heading %}Order {{ order.id }}{% endblock %}
+{% block subheading %}Patient: {{ patient_name }} &middot; {{ order.priority }} &middot; Ordered {{ order.ordered_at }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:22px;">
+  <div class="card-body" style="display:flex;gap:32px;flex-wrap:wrap;align-items:center;">
+    <div class="metric-line" style="border:none;flex-direction:column;gap:4px;">
+      <span class="lbl">Patient</span>
+      <span class="val" style="font-size:17px;">{{ patient_name }}</span>
+    </div>
+    <div class="metric-line" style="border:none;flex-direction:column;gap:4px;">
+      <span class="lbl">Priority</span>
+      <span class="badge {{ 'badge-danger' if order.priority == 'Stat' else ('badge-warning' if order.priority == 'Urgent' else 'badge-info') }}">{{ order.priority }}</span>
+    </div>
+    <div class="metric-line" style="border:none;flex-direction:column;gap:4px;">
+      <span class="lbl">Requested By</span>
+      <span class="val">{{ order.requested_by }}</span>
+    </div>
+    <div class="metric-line" style="border:none;flex-direction:column;gap:4px;">
+      <span class="lbl">Status</span>
+      <span class="badge {{ 'badge-success' if order.status == 'Completed' else ('badge-danger' if order.status == 'Cancelled' else ('badge-warning' if order.status == 'In Progress' else 'badge-muted')) }}">{{ order.status }}</span>
+    </div>
+    <div class="metric-line" style="border:none;flex-direction:column;gap:4px;margin-left:auto;">
+      <span class="lbl">Order Total</span>
+      <span class="val" style="font-size:20px;color:var(--primary);">&#8377; {{ total | int }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h3>Tests in this Order <span class="badge badge-info">{{ items | length }}</span></h3>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline btn-sm" onclick="openModal('addTests'); setTimeout(initPicker, 60);">&#43; Add Tests</button>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('results_page') }}">Enter Results</a>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Test</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Result</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in items %}
+        {% set t = t_map.get(i.test_id, {}) %}
+        <tr>
+          <td class="cell-strong">{{ i.id }}</td>
+          <td>{{ t.test_name or i.test_id }}</td>
+          <td><span class="badge badge-info">{{ t.category or '—' }}</span></td>
+          <td>&#8377; {{ i.price | int }}</td>
+          <td>
+            <select class="status-select" data-item="{{ i.id }}" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;font-weight:600;background:#fff;">
+              {% for s in all_statuses %}
+              <option value="{{ s }}" {{ 'selected' if i.status == s else '' }}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            {% if i.status == 'Completed' %}
+              <span class="cell-strong">{{ i.result_value }} {{ i.unit }}</span>
+            {% else %}<span class="cell-muted">—</span>{% endif %}
+          </td>
+          <td>
+            <button class="btn btn-ghost btn-sm" onclick="deleteItem('{{ i.id }}')">Remove</button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state"><div class="big">&#9988;</div><h4>No tests on this order</h4><p>Use &quot;Add Tests&quot; to build the order.</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="addTests" hidden>
+  <div class="modal-head">
+    <h3>Add Tests to {{ order.id }}</h3>
+    <button class="modal-close" onclick="closeModal()">&#10005;</button>
+  </div>
+  <div class="modal-body">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="add_tests">
+      <div class="form-group">
+        <label>Select Tests &amp; Profiles</label>
+        {{ test_picker(profiles, profile_summaries, tests_by_cat) }}
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" onclick="return syncPickerSubmit(event)">Add Tests</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.status-select').forEach(function (sel) {
+  sel.addEventListener('change', function () {
+    var itemId = this.dataset.item;
+    fetch('/api/order-tests/' + itemId + '/status', {
+      method: 'POST',
+      headers: csrfHeaders(),
+      body: JSON.stringify({ status: this.value })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.ok) { showToast('Item ' + itemId + ': ' + d.status, 'success'); }
+      else { showToast(d.error || 'Update failed', 'error'); }
+    })
+    .catch(function () { showToast('Network error', 'error'); });
+  });
+});
+
+function deleteItem(itemId) {
+  if (!confirm('Remove this test from the order?')) return;
+  fetch('/api/order-tests/' + itemId + '/delete', { method: 'POST', headers: csrfHeaders() })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.ok) { showToast('Test removed', 'success'); setTimeout(function () { location.reload(); }, 600); }
+      else { showToast(d.error || 'Failed', 'error'); }
+    })
+    .catch(function () { showToast('Network error', 'error'); });
+}
+</script>
+{% endblock %}
