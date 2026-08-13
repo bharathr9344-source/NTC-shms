@@ -1,0 +1,4 @@
+id,name,age,gender,phone,email,doctor,created_at
+PAT0001,Ramesh Kumar,45,Male,9840012345,ramesh.k@gmail.com,Dr. Meena,2026-08-13 11:07:26
+PAT0002,Priya Sharma,32,Female,9950022334,priya.s@yahoo.com,Dr. Arjun,2026-08-13 11:07:26
+PAT0003,Suresh Babu,58,Male,9776655443,suresh.b@gmail.com,Dr. Meena,2026-08-13 11:07:26

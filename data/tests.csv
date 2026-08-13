@@ -1,0 +1,31 @@
+id,test_name,category,price,turnaround_hours,reference_range,unit
+TST0001,Complete Blood Count (CBC),Hematology,450,6,See report,
+TST0002,Hemoglobin (Hb),Hematology,120,4,12-16 g/dL,g/dL
+TST0003,ESR,Hematology,150,6,0-20 mm/hr,mm/hr
+TST0004,Blood Grouping & Rh,Hematology,180,4,NA,
+TST0005,PT / INR,Hematology,320,8,INR 0.8-1.2,INR
+TST0006,Blood Glucose (Fasting),Biochemistry,180,4,70-100 mg/dL,mg/dL
+TST0007,Blood Glucose (Post Prandial),Biochemistry,180,4,70-140 mg/dL,mg/dL
+TST0008,HbA1c,Biochemistry,450,12,< 5.7 %,%
+TST0009,Lipid Profile,Biochemistry,600,8,See report,mg/dL
+TST0010,Liver Function Test (LFT),Biochemistry,550,8,See report,
+TST0011,Renal Function Test (RFT),Biochemistry,500,8,See report,
+TST0012,Serum Electrolytes,Biochemistry,420,8,"Na 135-145, K 3.5-5.1",mmol/L
+TST0013,Uric Acid,Biochemistry,280,6,3.4-7.0 mg/dL,mg/dL
+TST0014,Calcium,Biochemistry,250,6,8.5-10.5 mg/dL,mg/dL
+TST0015,"Thyroid Profile (T3, T4, TSH)",Endocrinology,750,12,TSH 0.4-4.0 uIU/mL,uIU/mL
+TST0016,Vitamin D (25-OH),Endocrinology,900,24,30-100 ng/mL,ng/mL
+TST0017,Vitamin B12,Endocrinology,850,24,200-900 pg/mL,pg/mL
+TST0018,Dengue NS1 Antigen,Serology,700,8,Negative,
+TST0019,Widal Test,Serology,300,8,< 1:80,
+TST0020,HBsAg (Hepatitis B),Serology,400,8,Non-reactive,
+TST0021,HIV 1 & 2 Antibody,Serology,500,8,Non-reactive,
+TST0022,Urine Routine & Microscopy,Microbiology,200,6,See report,
+TST0023,Urine Culture & Sensitivity,Microbiology,450,48,No growth,
+TST0024,Stool Routine & Occult Blood,Microbiology,220,8,Negative,
+TST0025,ECG (12 Lead),Cardiology,350,24,Normal,
+TST0026,2D Echocardiography,Cardiology,1800,24,See report,
+TST0027,Troponin I,Cardiology,950,12,< 0.04 ng/mL,ng/mL
+TST0028,X-Ray Chest (PA View),Radiology,500,24,NA,
+TST0029,USG Abdomen & Pelvis,Radiology,1500,24,See report,
+TST0030,CT Scan Brain (Plain),Radiology,3200,24,See report,

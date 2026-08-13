@@ -1,0 +1,2 @@
+id,username,full_name,role,password_hash,must_change,created_at
+USR0001,admin,System Administrator,admin,scrypt:32768:8:1$HrggX5bgmMCVO5do$39cd555169e6a9e83a01405c98b43850ace7bcfc67ca940716de9ede39841d6b00180fe3788afd1658d1d3c11a8e4ae8337cf60e73e0a4e50b4bbdd68224f815,0,2026-08-13 11:31:51
